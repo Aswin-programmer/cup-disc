@@ -58,7 +58,7 @@ def convert_to_web_format(img_path):
             print(f"Error converting TIFF to PNG: {str(e)}")
             return img_path
     return img_path
-
+     
 def calculate_cdr(img_path):
     """
     Calculate cup-to-disc ratio for a single image
