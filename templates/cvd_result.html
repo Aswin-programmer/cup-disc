@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CVD Risk Assessment Results</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h1>CVD Risk Assessment Results</h1>
+        
+        <div class="results-section">
+            <div class="risk-result {{ 'high-risk' if risk_level == 'High Risk' else 'low-risk' }}">
+                <h2>Risk Assessment: <span class="risk-value">{{ risk_level }}</span></h2>
+                <p class="risk-reason">{{ risk_reason }}</p>
+            </div>
+            
+            <div class="measurements">
+                <h2>Ophthalmic Measurements</h2>
+                <div class="measurement-grid">
+                    <div class="measurement-item {{ 'abnormal' if cdr > 0.6 else '' }}">
+                        <h3>Cup-to-Disc Ratio (CDR)</h3>
+                        <p class="value">{{ cdr }}</p>
+                        <p class="interpretation">
+                            {% if cdr > 0.6 %}
+                            <span class="abnormal">Above normal range (> 0.6)</span>
+                            {% else %}
+                            <span class="normal">Within normal range (≤ 0.6)</span>
+                            {% endif %}
+                        </p>
+                    </div>
+                    
+                    <div class="measurement-item {{ 'abnormal' if avr != 'N/A' and (avr < 0.67 or avr > 0.75) else '' }}">
+                        <h3>Arteriovenous Ratio (AVR)</h3>
+                        <p class="value">{{ avr }}</p>
+                        <p class="interpretation">
+                            {% if avr != 'N/A' %}
+                                {% if avr < 0.67 or avr > 0.75 %}
+                                <span class="abnormal">Outside normal range (0.67-0.75)</span>
+                                {% else %}
+                                <span class="normal">Within normal range (0.67-0.75)</span>
+                                {% endif %}
+                            {% else %}
+                            <span>Not available</span>
+                            {% endif %}
+                        </p>
+                    </div>
+                    
+                    <div class="measurement-item {{ 'abnormal' if fd != 'N/A' and fd < 1.3 else '' }}">
+                        <h3>Fractal Dimension (FD)</h3>
+                        <p class="value">{{ fd }}</p>
+                        <p class="interpretation">
+                            {% if fd != 'N/A' %}
+                                {% if fd < 1.3 %}
+                                <span class="abnormal">Below normal range (< 1.3)</span>
+                                {% else %}
+                                <span class="normal">Within normal range (≥ 1.3)</span>
+                                {% endif %}
+                            {% else %}
+                            <span>Not available</span>
+                            {% endif %}
+                        </p>
+                    </div>
+                </div>
+                
+                <div class="biomarker-status">
+                    <h3>Biomarker Status:</h3>
+                    <p>
+                        <strong>OBM (High-Risk Biomarkers):</strong> 
+                        <span class="{{ 'present' if obm_present else 'absent' }}">
+                            {{ 'Present' if obm_present else 'Absent' }}
+                        </span>
+                    </p>
+                    <p>
+                        <strong>NBM (Neutral Biomarkers):</strong> 
+                        <span class="neutral {{ 'present' if nbm_present else 'absent' }}">
+                            {{ 'Present' if nbm_present else 'Absent' }}
+                        </span>
+                    </p>
+                </div>
+            </div>
+            
+            <!-- CDR Analysis -->
+            <!-- Add this new section before CDR Analysis -->
+            <div class="analysis-section">
+                <h2>Image Preprocessing</h2>
+                <div class="image-results">
+                    <div class="result-image">
+                        <h3>Original Image</h3>
+                        <img src="{{ url_for('static', filename=original_image) }}" alt="Original Retinal Image">
+                    </div>
+                    
+                    <div class="result-image">
+                        <h3>CLAHE Enhanced</h3>
+                        <img src="{{ url_for('static', filename=clahe_image) }}" alt="CLAHE Processed">
+                        <p class="image-legend">
+                            Contrast Limited Adaptive Histogram Equalization
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Modified CDR Analysis Section -->
+            <div class="analysis-section">
+                <h2>Cup-to-Disc Ratio (CDR) Analysis</h2>
+                <div class="image-results">
+                    <div class="result-image">
+                        <h3>Combined Segmentation</h3>
+                        <img src="{{ url_for('static', filename=overlay_image) }}" alt="Combined Segmentation">
+                        <p class="image-legend">
+                            <span class="cup-color">■</span> Cup
+                            <span class="disc-color">■</span> Disc
+                        </p>
+                    </div>
+                </div>
+                
+                <div class="image-results">
+                    <div class="result-image">
+                        <h3>Optic Disc Segmentation</h3>
+                        <img src="{{ url_for('static', filename=disc_image) }}" alt="Optic Disc Segmentation">
+                    </div>
+                    
+                    <div class="result-image">
+                        <h3>Optic Cup Segmentation</h3>
+                        <img src="{{ url_for('static', filename=cup_image) }}" alt="Optic Cup Segmentation">
+                    </div>
+                </div>
+            </div>
+            
+            <!-- AVR Analysis (if available) -->
+            <!-- AVR Analysis (if available) -->
+            {% if process_images.get('vessel_seg') or process_images.get('boundary') or process_images.get('av_class') %}
+            <div class="analysis-section">
+                <h2>Arteriovenous Ratio (AVR) Analysis</h2>
+                <div class="image-results">
+                    {% if process_images.get('vessel_seg') %}
+                    <div class="result-image">
+                        <h3>Vessel Segmentation</h3>
+                        <img src="{{ url_for('static', filename=process_images['vessel_seg']) }}" alt="Vessel Segmentation">
+                    </div>
+                    {% endif %}
+                </div>
+                
+                {% if process_images.get('av_class') %}
+                <div class="image-results">
+                    <div class="result-image">
+                        <h3>A/V Classification</h3>
+                        <img src="{{ url_for('static', filename=process_images['av_class']) }}" alt="A/V Classification">
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+            {% endif %}
+            
+            <!-- FD Analysis (if available) -->
+            {% if 'fd' in process_images and process_images['fd'] %}
+            <div class="analysis-section">
+                <h2>Fractal Dimension (FD) Analysis</h2>
+                <div class="image-results">
+                    <div class="result-image">
+                        <h3>Fractal Dimension Visualization</h3>
+                        <img src="{{ url_for('static', filename=process_images['fd']) }}" alt="Fractal Dimension">
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+        
+        <div class="back-button">
+            <a href="{{ url_for('index') }}">Analyze Another Image</a>
+        </div>
+    </div>
+</body>
+</html>
